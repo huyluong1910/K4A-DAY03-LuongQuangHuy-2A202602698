@@ -1,0 +1,37 @@
+[
+  {
+    "id": "TC01",
+    "type": "direct_query",
+    "question": "Chào bạn, bạn có thể giới thiệu quy chế học vụ cơ bản của Đại học VinUni không?",
+    "expected_behavior": "Chatbot trả lời trực tiếp từ System Prompt, không cần gọi bất kỳ Tool nào.",
+    "complexity": "Low"
+  },
+  {
+    "id": "TC02",
+    "type": "single_tool_query",
+    "question": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
+    "expected_behavior": "Agent nhận diện nhu cầu tra cứu, tự động phát sinh Tool Call 'academic_query' với mã SV2026001.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC03",
+    "type": "appointment_booking",
+    "question": "Hãy đặt lịch hẹn tư vấn học tập cho sinh viên SV2026001 với TS. Trần Văn A vào lúc 14:00 ngày 2026-09-25.",
+    "expected_behavior": "Agent tự động phát sinh Tool Call 'schedule_appointment' với đúng tham số student_id='SV2026001', advisor_name='TS. Trần Văn A', datetime_str='2026-09-25 14:00'.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC04",
+    "type": "multi_step_reasoning",
+    "question": "Kiểm tra điểm GPA của sinh viên SV2026001, nếu GPA đạt từ 3.5 trở lên thì hãy đăng ký đặt lịch tư vấn học bổng với PGS. Lê Thị B vào lúc 09:00 ngày 2026-10-01.",
+    "expected_behavior": "Agent thực hiện ReAct loop đa bước: Bước 1 gọi 'academic_query' tra cứu thông tin SV2026001 (GPA 3.82 >= 3.5), Bước 2 gọi 'schedule_appointment' để đặt lịch tư vấn.",
+    "complexity": "High"
+  },
+  {
+    "id": "TC05",
+    "type": "edge_case_handling",
+    "question": "Cho tôi xem thông tin học vụ và điểm số của mã sinh viên SV9999999.",
+    "expected_behavior": "Agent gọi 'academic_query', nhận thông báo không tìm thấy dữ liệu từ Tool và đưa ra phản hồi lịch sự, chính xác, không tự suy đoán hay bịa đặt thông tin.",
+    "complexity": "Medium"
+  }
+]

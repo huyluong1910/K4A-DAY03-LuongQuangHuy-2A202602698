@@ -27,6 +27,7 @@ from providers import get_llm_provider
 
 load_dotenv()
 
+
 def load_test_cases():
     """Tải danh sách 5 test cases từ config/test_cases.json hoặc config/test_cases.example.json"""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -107,8 +108,18 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
             
             # Thực thi Tool qua MCP Server
             mcp_result = mcp_server.call_tool(tool_name, arguments)
-            obs_data = mcp_result.get("result", {})
             
+            # Giải mã nội dung từ phản hồi JSON-RPC 2.0
+            obs_data = {}
+            if "result" in mcp_result and "content" in mcp_result["result"]:
+                raw_text = mcp_result["result"]["content"][0]["text"]
+                try:
+                    obs_data = json.loads(raw_text)
+                except Exception:
+                    obs_data = {"raw": raw_text}
+            elif "error" in mcp_result:
+                obs_data = mcp_result["error"]
+
             if not obs_data:
                 print(f"👁️ [Observation từ MCP Server]: {{}}")
                 print(f"⚠️ [CHÚ Ý]: MCP Server trả về kết quả rỗng! Học viên cần hoàn thành TODO 2.1 trong 'src/mcp_server.py'.")
@@ -204,7 +215,7 @@ if __name__ == "__main__":
             print(f"\n==================================================")
             print(f"🧪 [{tc['id']}] Loại test: {tc['type']} (Độ phức tạp: {tc['complexity']})")
             print(f"📌 Kỳ vọng: {tc['expected_behavior']}")
-            
+            time.sleep(5)
             if tc["question"].strip().startswith("TODO"):
                 print(f"⏸️ [CHƯA KÍCH HOẠT - ĐANG LÀ TODO]:")
                 print(f"   {tc['question']}")
@@ -221,7 +232,6 @@ if __name__ == "__main__":
             save_waterfall_trace(all_traces)
         print(f"💡 Để trò chuyện trực tiếp từng câu: Chạy 'python src/app.py --interactive'")
     else:
-        # Chế độ mặc định khi chỉ gõ 'python src/app.py'
         print("ℹ️ HƯỚNG DẪN SỬ DỤNG CHƯƠNG TRÌNH:")
         print("  1. Chat trực tiếp liên tục:   python src/app.py --interactive")
         print("  2. Chạy toàn bộ Test Cases:    python src/app.py --all\n")

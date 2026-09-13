@@ -14,44 +14,64 @@ if sys.stdout.encoding != 'utf-8':
     except Exception:
         pass
 
+
 class MCPAcademicServer:
     """
     Giả lập MCP Server tuân thủ chuẩn giao thức Model Context Protocol
     """
+
     def __init__(self, server_name: str = "vinuni-academic-mcp-server"):
         self.server_name = server_name
         self.version = "2026.1.0"
-        
+        self.tools = TOOLS_SCHEMA  # Khởi tạo thuộc tính self.tools
+
     def list_tools(self) -> List[Dict[str, Any]]:
         """Trả về danh sách các Tools chuẩn giao thức MCP"""
-        return TOOLS_SCHEMA
-        
-    def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        return self.tools
+
+    def call_tool(self, tool_name: str, arguments: dict) -> dict:
         """
-        [TASK 2.1] HỌC VIÊN HOÀN THIỆN HÀM THỰC THI TOOL TRÊN MCP SERVER
-        Thực thi request gọi Tool theo chuẩn MCP JSON-RPC
+        Task 2.1: Tiếp nhận yêu cầu gọi Tool từ Agent (MCP Client),
+        thực thi qua dispatch_tool_call và đóng gói chuẩn JSON-RPC 2.0.
         """
-        # --------------------------------------------------------------------------
-        # TODO 2.1: HỌC VIÊN HOÀN THIỆN HÀM GỌI TOOL CHUẨN MCP JSON-RPC
-        # 🎯 YÊU CẦU THỰC THI THUẬT TOÁN:
-        # 1. Gọi hàm dispatch_tool_call(tool_name, arguments) để lấy chuỗi JSON kết quả từ Tool Router.
-        # 2. Chuyển đổi chuỗi JSON kết quả thành Python Dictionary (dùng json.loads).
-        # 3. Đóng gói phản hồi và trả về Dict theo đúng chuẩn giao thức MCP JSON-RPC 2.0:
-        #    - Các trường bắt buộc: "jsonrpc": "2.0", "server": self.server_name, "tool": tool_name, "result": content
-        # --------------------------------------------------------------------------
-        return {}
+        try:
+            # Thực thi tool và nhận kết quả từ tools.py
+            raw_result = dispatch_tool_call(tool_name, arguments)
+
+            return {
+                "jsonrpc": "2.0",
+                "result": {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": raw_result
+                        }
+                    ],
+                    "isError": False
+                },
+                "id": 1
+            }
+        except Exception as e:
+            return {
+                "jsonrpc": "2.0",
+                "error": {
+                    "code": -32603,
+                    "message": str(e)
+                },
+                "id": 1
+            }
 
 
 if __name__ == "__main__":
     print("==========================================================")
     print("🔌 KIỂM THỬ ĐỘC LẬP MCP SERVER (vinuni-academic-mcp-server)")
     print("==========================================================")
-    
+
     server = MCPAcademicServer()
     tools = server.list_tools()
     print(f"✅ Khởi tạo thành công MCP Server: {server.server_name} (Version: {server.version})")
     print(f"📦 Số lượng Tools công bố: {len(tools)}")
-    
+
     # Kiểm tra trạng thái TODO 1.2 (Tool Schema)
     sched_tool = next((t for t in tools if t.get("name") == "schedule_appointment"), None)
     if sched_tool and not sched_tool.get("parameters", {}).get("properties"):
